@@ -1,4 +1,4 @@
-package com.oecontrib.microservices.v1;
+package com.oecontrib.microservices;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
