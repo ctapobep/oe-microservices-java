@@ -9,6 +9,25 @@ import static openeye.oechem.oechem.OEReadMolecule;
 import static openeye.oechem.oechem.OEWriteMolecule;
 
 public class Molecule {
+    public enum MoleculeType {
+        SMILES("string"), MOL2("string");
+        private boolean isBinary;
+
+        MoleculeType(String binaryOrString) {
+            this.isBinary = binaryOrString.equals("binary");
+        }
+
+        public boolean equals(String stringRepresentation) {
+            return this.toString().equalsIgnoreCase(stringRepresentation);
+        }
+        public static MoleculeType parse(String stringRepresentation) {
+            for(MoleculeType type: values()) {
+                if(type.equals(stringRepresentation)) return type;
+            }
+            throw new WrongMoleculeFormatException(stringRepresentation);
+        }
+    }
+
     private final OEGraphMol oeMolecule;
 
     public Molecule(OEGraphMol oeMolecule) {
@@ -36,11 +55,19 @@ public class Molecule {
         OEWriteMolecule(output, this.oeMolecule);
         return output.GetString();
     }
+    public String toFasta() {
+        oemolostream output = new oemolostream();
+        output.SetFormat(OEFormat.MOL2);
+        output.openstring();
+        OEWriteMolecule(output, this.oeMolecule);
+        return output.GetString();
+    }
     public String toString(String format) {
-        if("smiles".equalsIgnoreCase(format)) {
-            return toSmiles();
+        switch (MoleculeType.parse(format)) {
+            case SMILES: return toSmiles();
+            case MOL2: return this.toFasta();
+            default: throw new WrongMoleculeFormatException(format);
         }
-        throw new WrongMoleculeFormatException(format);
     }
 
     public OEGraphMol getOeMolecule() {

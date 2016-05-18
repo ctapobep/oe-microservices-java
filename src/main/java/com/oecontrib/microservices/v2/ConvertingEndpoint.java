@@ -13,8 +13,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @RestController @RequestMapping("/v2/structure")
 public class ConvertingEndpoint {
     @RequestMapping(method = GET)
-    public ResponseEntity depict(@RequestParam("val") String moleculeBody,
-                                 @RequestHeader(value = "Accepts", defaultValue = "smiles") String acceptsHeader) {
+    public ResponseEntity convert(@RequestParam("val") String moleculeBody,
+                                  @RequestHeader(value = "Accepts", defaultValue = "smiles") String acceptsHeader) {
         Molecule mol = Molecule.parse(moleculeBody);
         return ResponseEntity.ok(mol.toString(acceptsHeader));
     }

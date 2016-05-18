@@ -1,7 +1,6 @@
 package com.oecontrib.microservices.v2;
 
 import com.jayway.restassured.module.mockmvc.response.MockMvcResponse;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +40,25 @@ public class ConvertingEndpointTest {
         MockMvcResponse response = convert("c1ccc1", wrongFormat);
         assertEquals(400, response.statusCode());
         assertEquals("Unknown molecule format: " + wrongFormat, response.asString());
+    }
+    @Test public void convertMoleculeToMol2() {
+        MockMvcResponse response = convert("c1ccc1", "mol2");
+        assertEquals("@<TRIPOS>MOLECULE\n" +
+                "*****\n" +
+                "    4     4     0     0     0\n" +
+                "SMALL\n" +
+                "NO_CHARGES\n" +
+                "\n" +
+                "@<TRIPOS>ATOM\n" +
+                "      1 C1          0.0000    0.0000    0.0000 C.2       1 <0>         0.0000\n" +
+                "      2 C2          0.0000    0.0000    0.0000 C.2       1 <0>         0.0000\n" +
+                "      3 C3          0.0000    0.0000    0.0000 C.2       1 <0>         0.0000\n" +
+                "      4 C4          0.0000    0.0000    0.0000 C.2       1 <0>         0.0000\n" +
+                "@<TRIPOS>BOND\n" +
+                "     1    1    4 2\n" +
+                "     2    1    2 1\n" +
+                "     3    2    3 2\n" +
+                "     4    3    4 1\n", response.asString());
     }
 
     private MockMvcResponse convert(String smiles) {
