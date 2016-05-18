@@ -36,6 +36,12 @@ public class Molecule {
         OEWriteMolecule(output, this.oeMolecule);
         return output.GetString();
     }
+    public String toString(String format) {
+        if("smiles".equalsIgnoreCase(format)) {
+            return toSmiles();
+        }
+        throw new WrongMoleculeFormatException(format);
+    }
 
     public OEGraphMol getOeMolecule() {
         return this.oeMolecule;

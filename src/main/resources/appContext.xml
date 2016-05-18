@@ -6,6 +6,7 @@
     <bean class="com.oecontrib.microservices.HomeEndpoint"/>
     <bean class="com.oecontrib.microservices.v2.RenderingEndpoint"/>
     <bean class="com.oecontrib.microservices.v2.ConvertingEndpoint"/>
+    <bean class="com.oecontrib.microservices.EndpointExceptionHandler"/>
 
     <bean class="org.springframework.boot.context.embedded.ServletRegistrationBean">
         <constructor-arg index="0">

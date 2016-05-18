@@ -12,24 +12,22 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.mockMvc;
+import static io.qala.datagen.RandomShortApi.alphanumeric;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class) @ContextConfiguration("/testAppContext.xml") @WebAppConfiguration
 public class ConvertingEndpointTest {
     @Autowired MockMvc mockMvc;
 
-    @Before public void initMockMvc() {
-        mockMvc(mockMvc);
-    }
-
     @Test public void successfulConversionReturns200() {
         String smiles = "c1ccc1";
         MockMvcResponse response = convert(smiles);
         assertEquals(200, response.statusCode());
     }
+
     @Test public void convertSmilesToSmilesReturnsSameString() {
         String smiles = "c1c(c(cc(c1F)F)F)C[C@H](CC(=O)N2CCn3c(nnc3C(F)(F)F)C2)N";
-        MockMvcResponse response = convert(smiles);
+        MockMvcResponse response = convert(smiles, "smiles");
         assertEquals(smiles + "\n", response.asString());
     }
 
@@ -38,9 +36,21 @@ public class ConvertingEndpointTest {
         assertEquals("c1c(c(cc(c1F)F)F)C[C@H](CC(=O)N2CCn3c(nnc3C(F)(F)F)C2)N\n", response.asString());
     }
 
+    @Test public void convertMoleculeToInvalidFormatReturns400BadRequest() {
+        String wrongFormat = alphanumeric(1, 100);
+        MockMvcResponse response = convert("c1ccc1", wrongFormat);
+        assertEquals(400, response.statusCode());
+        assertEquals("Unknown molecule format: " + wrongFormat, response.asString());
+    }
+
     private MockMvcResponse convert(String smiles) {
+        return convert(smiles, "smiles");
+    }
+    private MockMvcResponse convert(String smiles, String outputFormat) {
+        mockMvc(mockMvc);
         return given().
                 param("val", smiles).
+                header("Accepts", outputFormat).
                 get("/v2/structure");
     }
 }
