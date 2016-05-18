@@ -4,7 +4,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
     <mvc:annotation-driven/>
     <bean class="com.oecontrib.microservices.HomeEndpoint"/>
-    <bean class="com.oecontrib.microservices.v1.RenderingEndpoint"/>
+    <bean class="com.oecontrib.microservices.v2.RenderingEndpoint"/>
+    <bean class="com.oecontrib.microservices.v2.ConvertingEndpoint"/>
 
     <bean class="org.springframework.boot.context.embedded.ServletRegistrationBean">
         <constructor-arg index="0">

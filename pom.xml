@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.openeye</groupId>
             <artifactId>oejava</artifactId>
-            <version>2016.Feb.1</version>
+            <version>2016.Jun.b1</version>
             <classifier>${oe.platform}-x64</classifier>
         </dependency>
         <dependency>
