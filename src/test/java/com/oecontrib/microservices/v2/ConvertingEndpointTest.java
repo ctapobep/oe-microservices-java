@@ -1,6 +1,7 @@
 package com.oecontrib.microservices.v2;
 
 import com.jayway.restassured.module.mockmvc.response.MockMvcResponse;
+import com.jayway.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.nio.file.Paths;
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.mockMvc;
 import static io.qala.datagen.RandomShortApi.alphanumeric;
+import static io.qala.datagen.RandomShortApi.bool;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class) @ContextConfiguration("/testAppContext.xml") @WebAppConfiguration
@@ -56,10 +58,11 @@ public class ConvertingEndpointTest {
     }
     private MockMvcResponse convert(String smiles, String outputFormat) {
         mockMvc(mockMvc);
-        return given().
-                param("val", smiles).
-                header("Accepts", outputFormat).
-                get("/v2/structure");
+        MockMvcRequestSpecification request = given().param("val", smiles);
+        boolean useHeader = bool();
+        if(useHeader) request.header("Accepts", outputFormat);
+        if(!useHeader || bool()) request.param("Accepts", outputFormat);
+        return request.get("/v2/structure");
     }
 
     private String molecule1(String format) {
