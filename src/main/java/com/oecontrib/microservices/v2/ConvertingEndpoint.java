@@ -1,22 +1,29 @@
 package com.oecontrib.microservices.v2;
 
 import com.oecontrib.microservices.Molecule;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
-@RestController @RequestMapping("/v2/structure")
+@Controller @RequestMapping("/v2/structure")
 public class ConvertingEndpoint {
     @RequestMapping(method = GET)
+
     public ResponseEntity convert(@RequestParam("val") String moleculeBody, HttpServletRequest request) {
-        String acceptsHeader = paramOrHeader(request, "Accepts");
-        Molecule mol = Molecule.parse(moleculeBody);
-        return ResponseEntity.ok(mol.toString(acceptsHeader));
+        MediaType inputMediaType = MediaType.parseMediaType(paramOrHeader(request, "Content-Type"));
+        String inputFormat = inputMediaType.getSubtype();
+
+        MediaType outputMediaType = MediaType.parseMediaType(paramOrHeader(request, "Accept"));
+        String outputFormat = outputMediaType.getSubtype();
+
+        Molecule mol = Molecule.parse(inputFormat, moleculeBody);
+        return ResponseEntity.ok(mol.toString(outputFormat));
     }
 
     private String paramOrHeader(HttpServletRequest request, String name) {

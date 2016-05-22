@@ -18,51 +18,65 @@ import java.nio.file.Paths;
 
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.mockMvc;
-import static io.qala.datagen.RandomShortApi.alphanumeric;
-import static io.qala.datagen.RandomShortApi.bool;
+import static io.qala.datagen.RandomShortApi.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class) @ContextConfiguration("/testAppContext.xml") @WebAppConfiguration
 public class ConvertingEndpointTest {
     @Autowired MockMvc mockMvc;
 
-    @Test public void successfulConversionReturns200() {
-        String smiles = "c1ccc1";
-        MockMvcResponse response = convert(smiles);
-        assertEquals(200, response.statusCode());
-    }
-
     @Test public void convertSmilesToSmilesReturnsSameString() {
-        MockMvcResponse response = convert(molecule1("smiles"), "smiles");
+        MockMvcResponse response = convert("smiles", molecule1("smiles"));
         assertEquals(molecule1("smiles"), response.asString());
     }
 
     @Test public void convertSmilesToSmilesReturnsDifferentRepresentationOfSmiles() {
-        MockMvcResponse response = convert(molecule1("smiles-not-normalized"));
+        MockMvcResponse response = convert("smiles", "smiles", molecule1("smiles-not-normalized"));
         assertEquals(molecule1("smiles"), response.asString());
     }
 
-    @Test public void convertMoleculeToInvalidFormatReturns400BadRequest() {
+    @Test public void convertMoleculeToInvalidFormatReturns406NotAcceptable() {
         String wrongFormat = alphanumeric(1, 100);
-        MockMvcResponse response = convert("c1ccc1", wrongFormat);
-        assertEquals(400, response.statusCode());
-        assertEquals("Unknown molecule format: " + wrongFormat, response.asString());
+        MockMvcResponse response = convert("smiles", wrongFormat, "c1ccc1");
+        assertEquals(406, response.statusCode());
+        assertThat(response.asString()).isEqualToIgnoringCase("Unknown molecule format: " + wrongFormat);
     }
-    @Test public void convertMoleculeToMol2() {
-        MockMvcResponse response = convert("c1ccc1", "mol2");
-        assertEquals(molecule1("mol2"), response.asString());
+    @Test public void successfulConversionReturns200() {
+        String inputFormat = textFormat();
+        MockMvcResponse response = convert(inputFormat, textFormat(), molecule1(inputFormat));
+        assertEquals(200, response.statusCode());
     }
-
-    private MockMvcResponse convert(String smiles) {
-        return convert(smiles, "smiles");
+    @Test public void convertMoleculeFromAnyToAny() {
+        String inputFormat = stableFormat();
+        String outputFormat = stableFormat();
+        MockMvcResponse response = convert(inputFormat, outputFormat, molecule1(inputFormat));
+        assertEquals("Converting from " + inputFormat + " to " + outputFormat, molecule1(outputFormat), response.asString());
     }
-    private MockMvcResponse convert(String smiles, String outputFormat) {
+    // other formats are adding whitespaces, re-arrange records from time to time,
+    // so we can't compare them to static string :(
+    private String stableFormat() {
+        return sample("smiles", "ism");
+    }
+    private String textFormat() {
+        return sample("smiles", "ism", "usm", "mmod", "mol2", "mol2h", "sdf", "xyz");
+    }
+    private String binaryFormat() {
+        return sample("cdx", "oeb");
+    }
+    private MockMvcResponse convert(String formatFrom, String formatTo, String value) {
         mockMvc(mockMvc);
-        MockMvcRequestSpecification request = given().param("val", smiles);
-        boolean useHeader = bool();
-        if(useHeader) request.header("Accepts", outputFormat);
-        if(!useHeader || bool()) request.param("Accepts", outputFormat);
+        MockMvcRequestSpecification request = given().param("val", value);
+        oneOrMore(
+                () -> request.header("Accept", "text/" + formatTo),
+                () -> request.param("Accept", "text/" + formatTo));
+        oneOrMore(
+                () -> request.header("Content-Type", "text/" + formatFrom),
+                () -> request.param("Content-Type", "text/" + formatFrom));
         return request.get("/v2/structure");
+    }
+    private MockMvcResponse convert(String outputFormat, String smiles) {
+        return convert("smiles", outputFormat, smiles);
     }
 
     private String molecule1(String format) {

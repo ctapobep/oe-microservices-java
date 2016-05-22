@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class EndpointExceptionHandler {
     @ExceptionHandler(WrongMoleculeFormatException.class)
     public ResponseEntity duplicateException(WrongMoleculeFormatException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(exception.getMessage());
     }
 
 }

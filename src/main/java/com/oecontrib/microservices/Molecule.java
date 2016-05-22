@@ -10,10 +10,18 @@ import static openeye.oechem.oechem.OEWriteMolecule;
 
 public class Molecule {
     public enum MoleculeType {
-        SMILES("string"), MOL2("string");
+        SMILES(OEFormat.SMI, "string"), ISM(OEFormat.ISM, "string"), USM(OEFormat.USM, "string"),
+        MOL2(OEFormat.MOL2, "string"), MOL2H(OEFormat.MOL2H, "string"),
+        MMOD(OEFormat.MMOD, "string"),
+        CDX(OEFormat.CDX, "binary"), OEB(OEFormat.OEB, "binary"),
+        SDF(OEFormat.SDF, "string"),
+        SKC(OEFormat.SKC, "string"),
+        XYZ(OEFormat.XYZ, "string");
         private boolean isBinary;
+        private int oeFormat;
 
-        MoleculeType(String binaryOrString) {
+        MoleculeType(int oeFormat, String binaryOrString) {
+            this.oeFormat = oeFormat;
             this.isBinary = binaryOrString.equals("binary");
         }
 
@@ -33,12 +41,12 @@ public class Molecule {
     public Molecule(OEGraphMol oeMolecule) {
         this.oeMolecule = oeMolecule;
     }
-
-    public static Molecule parse(String moleculeBody) {
+    public static Molecule parse(String formatAsString, String moleculeBody) {
+        MoleculeType format = MoleculeType.parse(formatAsString);
         OEGraphMol mol = new OEGraphMol();
 
         oemolistream molInputStream = new oemolistream();
-        int molFormat = OEFormat.SMI;
+        int molFormat = format.oeFormat;
         molInputStream.SetFormat(molFormat);
 
         boolean openedStream = molInputStream.openstring(moleculeBody);
@@ -48,26 +56,15 @@ public class Molecule {
         if (!successfullyCreated) throw new IllegalArgumentException("Could not parse specified molecule");
         return new Molecule(mol);
     }
-
-    public String toSmiles() {
-        oemolostream output = new oemolostream();
-        output.openstring();
-        OEWriteMolecule(output, this.oeMolecule);
-        return output.GetString();
-    }
-    public String toFasta() {
-        oemolostream output = new oemolostream();
-        output.SetFormat(OEFormat.MOL2);
-        output.openstring();
-        OEWriteMolecule(output, this.oeMolecule);
-        return output.GetString();
+    public static Molecule parse(String moleculeBody) {
+        return parse(MoleculeType.SMILES.toString(), moleculeBody);
     }
     public String toString(String format) {
-        switch (MoleculeType.parse(format)) {
-            case SMILES: return toSmiles();
-            case MOL2: return this.toFasta();
-            default: throw new WrongMoleculeFormatException(format);
-        }
+        oemolostream output = new oemolostream();
+        output.SetFormat(MoleculeType.parse(format).oeFormat);
+        output.openstring();
+        OEWriteMolecule(output, this.oeMolecule);
+        return output.GetString();
     }
 
     public OEGraphMol getOeMolecule() {
